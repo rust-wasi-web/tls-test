@@ -1,0 +1,5 @@
+[target.wasm32-wasip1-threads]
+runner = "wasmer"
+
+[target.wasm32-wasip1]
+runner = "wasmer"
