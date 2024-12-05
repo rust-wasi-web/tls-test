@@ -1,33 +1,55 @@
+//! Test program for TLS destructors.
+//!
+//! Expected output when run without arguments:
+//!
+//! thread start
+//! thread exit
+//! dropping: thread
+//! thread joined
+//! main exit
+//! dropping: main
+//!
+//!
+//! Expected output when run with `--thread-exit`:
+//!
+//! thread start
+//! thread exiting process
+//! dropping: thread
+//!
+
 use std::cell::Cell;
+use std::env;
 
-fn main() {
-    println!("Available parallelism: {:?}", std::thread::available_parallelism());
+pub struct DropMsg(&'static str);
 
-    TLS.set(MyType("main 1"));
-    TLS.set(MyType("main 2"));
-
-    let hnd = std::thread::spawn(my_thread);
-    hnd.join().unwrap();
-    println!("thread joined");
-}
-
-pub struct MyType(&'static str);
-
-impl Drop for MyType {
+impl Drop for DropMsg {
     fn drop(&mut self) {
         println!("dropping: {}", self.0);
     }
 }
 
 thread_local! {
-    pub static TLS: Cell<MyType> = Cell::new(MyType("thread init value"));
-    pub static TLS_B: Cell<MyType> = Cell::new(MyType("thread init value B"));
+    pub static TLS: Cell<DropMsg> = Cell::new(DropMsg("init"));
 }
 
-pub fn my_thread() {
-    println!("my thread started");
-    TLS.set(MyType("thread set value 1"));
-    TLS.set(MyType("thread set value 2"));
-    TLS_B.set(MyType("thread set value 2 B"));
-    println!("my thread ending");
+fn main() {
+    TLS.set(DropMsg("main"));
+
+    println!("thread start");
+    let hnd = std::thread::spawn(thread_fn);
+    hnd.join().unwrap();
+    println!("thread joined");
+
+    println!("main exit");
+}
+
+pub fn thread_fn() {
+    TLS.set(DropMsg("thread"));
+
+    if env::args().any(|arg| arg == "--thread-exit") {
+        println!("thread exiting process");
+        std::process::exit(0);
+    }
+
+    println!("thread exit");
 }
