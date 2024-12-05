@@ -17,8 +17,11 @@
 //! dropping: thread
 //!
 
+#![feature(cfg_target_thread_local)]
+
 use std::cell::Cell;
 use std::env;
+use std::env::consts::{ARCH, FAMILY, OS};
 
 pub struct DropMsg(&'static str);
 
@@ -33,6 +36,10 @@ thread_local! {
 }
 
 fn main() {
+    println!("arch={ARCH} family={FAMILY} os={OS}");
+    println!("target_thread_local={}", cfg!(target_thread_local));
+    println!();
+
     TLS.set(DropMsg("main"));
 
     println!("thread start");
