@@ -3,3 +3,6 @@ runner = "wasmer"
 
 [target.wasm32-wasip1]
 runner = "wasmer"
+
+[target.x86_64-pc-windows-gnu]
+runner = "wine"

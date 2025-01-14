@@ -43,9 +43,13 @@ fn main() {
     TLS.set(DropMsg("main"));
 
     println!("thread start");
-    let hnd = std::thread::spawn(thread_fn);
-    hnd.join().unwrap();
-    println!("thread joined");
+    match std::thread::Builder::new().spawn(thread_fn) {
+        Ok(hnd) => {
+            hnd.join().unwrap();
+            println!("thread joined");
+        }
+        Err(err) => println!("cannot start thread: {err}"),
+    }
 
     println!("main exit");
 }
